@@ -1,0 +1,19 @@
+{
+  "name": "auto-lol-bargain",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "crypto-js": "^4.1.1",
+    "cryptojs": "^2.5.3",
+    "event-stream": "^4.0.1",
+    "prompts": "^2.4.1"
+  }
+}
