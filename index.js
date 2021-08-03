@@ -3,6 +3,7 @@ const {
   listChildFiles,
   readFileContent,
   checkFileExist,
+  listWindowsDisks,
 } = require("./helper/folder");
 const { selectQuestion } = require("./helper/input");
 const fs = require("fs"),
@@ -10,7 +11,7 @@ const fs = require("fs"),
 const introduction = require("./helper/introduction");
 
 const LOL_LOGS_FOLDER =
-  "C:\\Garena\\Games\\32787\\Game\\Logs\\LeagueClient Logs";
+  "C:\\Garena\\Games\\32787\\Game\\Logs\\LeagueClient Log";
 const LOL_CODE_FILE = "birthday_code_league_of_legends.txt";
 
 const _parseTokens = ({ logFiles }) => {
@@ -31,20 +32,69 @@ const _parseTokens = ({ logFiles }) => {
   return Array.from(new Set(tokens));
 };
 
-setImmediate(async () => {
-  introduction();
+const _delay = async (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  if (!checkFileExist({ path: LOL_LOGS_FOLDER })) {
+const _buildGamePath = async () => {
+  const disks = listWindowsDisks();
+
+  const selectedDisk = await selectQuestion({
+    question: "Chọn ổ đĩa đã cài đặt game: ",
+    options: disks.map((disk) => ({
+      title: `Ổ ${disk._mounted}\\`,
+      value: disk._mounted + "\\",
+    })),
+  });
+
+  let processingDir = selectedDisk;
+
+  while (true) {
+    console.log(`Đường dẫn đang chọn hiện tại: ${processingDir}`);
+
+    const subs = listChildFiles({ folder: processingDir, fullPath: false });
+
+    const isRootDiskPath = /^[A-Z]{1}:\\$/gim.test(processingDir);
+
+    const selectedSub = await selectQuestion({
+      question: "Chọn tiếp đường dẫn đến thư mục log của game: ",
+      options: subs
+        .map((sub) => ({
+          title: sub,
+          value: isRootDiskPath
+            ? `${processingDir}\\${sub}`
+            : `${processingDir}\\\\${sub}`,
+        }))
+        .concat([{ title: "Chọn đường dẫn này.", value: "choose" }]),
+    });
+
+    if (selectedSub === "choose") return processingDir.replace(/\\/gim, "\\\\");
+
+    processingDir = selectedSub;
+  }
+};
+
+setImmediate(async () => {
+  try {
+    introduction();
+
+  let NEW_LOL_LOGS_FOLDER = LOL_LOGS_FOLDER;
+
+  if (!(await checkFileExist({ path: LOL_LOGS_FOLDER }))) {
     console.log("Đường dẫn đến thư mục game sai.");
 
-    setTimeout(() => {
-      process.exit(1);
-    }, 2000);
+    NEW_LOL_LOGS_FOLDER = await _buildGamePath();
+  }
+
+  if (!(await checkFileExist({ path: NEW_LOL_LOGS_FOLDER }))) {
+    console.log("Đường dẫn đến thư mục game sai.");
+
+    await _delay(2000);
+
+    process.exit(1);
   }
 
   console.log("Đang lấy thông tin tài khoản...");
 
-  const logFiles = listChildFiles({ folder: LOL_LOGS_FOLDER });
+  const logFiles = listChildFiles({ folder: NEW_LOL_LOGS_FOLDER });
 
   const tokens = _parseTokens({ logFiles });
 
@@ -116,4 +166,11 @@ setImmediate(async () => {
           console.log(`Đã thử hết tất cả các mã.`);
         })
     );
+  } catch (error) {
+    console.log("Lỗi không xác định. Vui lòng thử lại.");
+
+    await _delay(2000);
+
+    process.exit(1);
+  }
 });

@@ -13,6 +13,7 @@
     "axios": "^0.21.1",
     "crypto-js": "^4.1.1",
     "event-stream": "^4.0.1",
+    "node-disk-info": "^1.3.0",
     "prompts": "^2.4.1"
   }
 }
