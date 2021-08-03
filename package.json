@@ -6,6 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "pkg": {
+    "assets": [
+      "*.txt"
+    ]
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
