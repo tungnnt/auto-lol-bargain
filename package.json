@@ -6,6 +6,21 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": "index.js",
+  "pkg": {
+    "scripts": [
+      "api/**/*.js",
+      "helper/**/*.js"
+    ],
+    "assets": [
+      "*.txt",
+      "node_modules/**/*"
+    ],
+    "targets": [
+      "node14-win-x64"
+    ],
+    "outputPath": "release"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
