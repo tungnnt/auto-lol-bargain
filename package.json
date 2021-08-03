@@ -12,7 +12,6 @@
   "dependencies": {
     "axios": "^0.21.1",
     "crypto-js": "^4.1.1",
-    "cryptojs": "^2.5.3",
     "event-stream": "^4.0.1",
     "prompts": "^2.4.1"
   }

@@ -6,7 +6,7 @@ const selectQuestion = async ({ question, options }) => {
     name: "value",
     message: question,
     choices: options.concat({
-      title: "None",
+      title: "Thoát",
       value: "null",
     }),
     initial: 0,

@@ -7,6 +7,7 @@ const {
 const { selectQuestion } = require("./helper/input");
 const fs = require("fs"),
   es = require("event-stream");
+const introduction = require("./helper/introduction");
 
 const LOL_LOGS_FOLDER =
   "C:\\Garena\\Games\\32787\\Game\\Logs\\LeagueClient Logs";
@@ -31,10 +32,14 @@ const _parseTokens = ({ logFiles }) => {
 };
 
 setImmediate(async () => {
+  introduction();
+
   if (!checkFileExist({ path: LOL_LOGS_FOLDER })) {
     console.log("Đường dẫn đến thư mục game sai.");
 
-    process.exit(1);
+    setTimeout(() => {
+      process.exit(1);
+    }, 2000);
   }
 
   console.log("Đang lấy thông tin tài khoản...");
