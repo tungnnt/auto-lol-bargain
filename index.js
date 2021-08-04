@@ -1,18 +1,22 @@
-const { getInvitationCode, enterInvitationCode } = require("./api/garena");
+const {
+  getInvitationCode,
+  enterInvitationCode,
+  login,
+} = require("./api/garena");
 const {
   listChildFiles,
   readFileContent,
   checkFileExist,
   listWindowsDisks,
 } = require("./helper/folder");
-const { selectQuestion } = require("./helper/input");
+const { selectQuestion, textQuestion } = require("./helper/input");
 const fs = require("fs"),
   es = require("event-stream");
 const introduction = require("./helper/introduction");
 
 const LOL_LOGS_FOLDER =
   "C:\\Garena\\Games\\32787\\Game\\Logs\\LeagueClient Logs";
-const LOL_CODE_FILE = require('path').join(
+const LOL_CODE_FILE = require("path").join(
   __dirname,
   "birthday_code_league_of_legends.txt"
 );
@@ -79,51 +83,69 @@ setImmediate(async () => {
   try {
     introduction();
 
-    let NEW_LOL_LOGS_FOLDER = LOL_LOGS_FOLDER;
-
-    if (!(await checkFileExist({ path: LOL_LOGS_FOLDER }))) {
-      console.log("Đường dẫn đến thư mục game sai.");
-
-      NEW_LOL_LOGS_FOLDER = await _buildGamePath();
-    }
-
-    if (!(await checkFileExist({ path: NEW_LOL_LOGS_FOLDER }))) {
-      console.log("Đường dẫn đến thư mục game sai.");
-
-      await _delay(2000);
-
-      process.exit(1);
-    }
-
-    console.log("Đang lấy thông tin tài khoản...");
-
-    const logFiles = listChildFiles({ folder: NEW_LOL_LOGS_FOLDER });
-
-    const tokens = _parseTokens({ logFiles });
-
-    const users = [];
-
-    for (const token of tokens) {
-      const userInfo = await getInvitationCode({ token });
-
-      const userIndex = users.findIndex(
-        (user) => user.garena_uid === userInfo.garena_uid
-      );
-
-      if (userIndex > -1) {
-        users[userIndex]["token"] = userInfo.token;
-      } else {
-        users.push(userInfo);
-      }
-    }
-
-    const selectedUser = await selectQuestion({
-      question: "Chọn tài khoản game của bạn: ",
-      options: users.map((user) => ({
-        title: user.user_profile.username,
-        value: user,
-      })),
+    const getTokenMethod = await selectQuestion({
+      question: "Chọn cách lấy token: ",
+      options: [
+        { title: "Tự nhập token trong file log của game.", value: "manually" },
+        { title: "Tự tìm token (có thể sẽ phải config lại đường dẫn).", value: "config" },
+      ],
     });
+
+    let userInfo = {};
+
+    if (getTokenMethod === "manually") {
+      const token = await textQuestion({ question: "Nhập token: " });
+
+      userInfo = await getInvitationCode({ token });
+    } else if (getTokenMethod === "config") {
+      let NEW_LOL_LOGS_FOLDER = LOL_LOGS_FOLDER;
+
+      if (!(await checkFileExist({ path: LOL_LOGS_FOLDER }))) {
+        console.log("Đường dẫn đến thư mục game sai.");
+
+        NEW_LOL_LOGS_FOLDER = await _buildGamePath();
+      }
+
+      if (!(await checkFileExist({ path: NEW_LOL_LOGS_FOLDER }))) {
+        console.log("Đường dẫn đến thư mục game sai.");
+
+        await _delay(2000);
+
+        process.exit(1);
+      }
+
+      console.log("Đang lấy thông tin tài khoản...");
+
+      const logFiles = listChildFiles({ folder: NEW_LOL_LOGS_FOLDER });
+
+      const tokens = _parseTokens({ logFiles });
+
+      const users = [];
+
+      for (const token of tokens) {
+        const userInfo = await getInvitationCode({ token });
+
+        const userIndex = users.findIndex(
+          (user) => user.garena_uid === userInfo.garena_uid
+        );
+
+        if (userIndex > -1) {
+          users[userIndex]["token"] = userInfo.token;
+        } else {
+          users.push(userInfo);
+        }
+
+        await _delay(2000);
+      }
+
+      userInfo = await selectQuestion({
+        question: "Chọn tài khoản game của bạn: ",
+        options: users.map((user) => ({
+          title: user.user_profile.username,
+          value: user,
+        })),
+      });
+    }
 
     const {
       invitation_code,
@@ -131,7 +153,7 @@ setImmediate(async () => {
       enter_code_amount,
       token,
       user_profile: { username },
-    } = selectedUser;
+    } = userInfo;
 
     console.log(
       `Tài khoản ${username} đã nhập CODE sinh nhật ${enter_code_amount} lần, có tổng cộng ${invitation_amount} lần mời, mã mời là ${invitation_code}.`
@@ -172,7 +194,7 @@ setImmediate(async () => {
   } catch (error) {
     console.log(error);
 
-    console.log("Lỗi không xác định. Vui lòng thử lại.");
+    console.log("Xảy ra lỗi trong quá trình thực hiện. Vui lòng thử lại.");
 
     await _delay(2000);
 

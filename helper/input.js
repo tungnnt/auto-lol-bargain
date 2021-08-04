@@ -17,6 +17,17 @@ const selectQuestion = async ({ question, options }) => {
   return response.value;
 };
 
+const textQuestion = async ({ question }) => {
+  const response = await prompts({
+    type: "text",
+    name: "value",
+    message: question,
+  });
+
+  return response.value;
+};
+
 module.exports = {
   selectQuestion,
+  textQuestion,
 };
